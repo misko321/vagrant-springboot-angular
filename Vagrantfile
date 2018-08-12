@@ -52,7 +52,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     d.build_dir = "."
     d.has_ssh = true
   end
-  config.ssh.port = 22
+  config.ssh.guest_port = 22
+
+  config.vm.provision "fix-no-tty", type: "shell" do |s|
+      s.privileged = false
+      s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
+    end
+
+  config.vm.provision "file", source: "./spring-boot-cli", destination: "~/spring-boot-cli"
+  config.vm.provision "shell", path: "provision.sh"
+
+  config.vm.network "forwarded_port", guest: 4200, host: 4200, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 8080, host: 8080, host_ip: "127.0.0.1"
   #
   # View the documentation for the provider you're using for more
   # information on available options.
